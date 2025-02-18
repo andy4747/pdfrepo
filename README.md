@@ -14,9 +14,9 @@ PDF Repo Explorer is a web application that allows you to browse and view PDF fi
 
 ## Screenshots
 
-![Screenshot 1](docs/screenshot1.png)
-![Screenshot 2](docs/screenshot2.png)
-![Screenshot 3](docs/screenshot3.png)
+![Screenshot 1](docs/demo1.png)
+![Screenshot 2](docs/demo2.png)
+![Screenshot 3](docs/demo3.png)
 
 
 ## Getting Started
