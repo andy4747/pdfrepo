@@ -3,9 +3,10 @@ nixPkgs = ["go", "gcc",  "git"]
 
 [phases.build]
 commands = [
+    "cd src",
     "go mod download",
     "go build -o pdfrepo"
 ]
 
 [start]
-cmd = "./pdfrepo"
+cmd = "./src/pdfrepo"
