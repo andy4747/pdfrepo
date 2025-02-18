@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["go", "gcc"]
+
+[phases.build]
+commands = [
+    "go mod download",
+    "go build -o pdfrepo"
+]
+
+[start]
+cmd = "./pdfrepo"
