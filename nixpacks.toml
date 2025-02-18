@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["go", "gcc"]
+nixPkgs = ["go", "gcc",  "git", "make"]
 
 [phases.build]
 commands = [
