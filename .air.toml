@@ -1,0 +1,27 @@
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -o ./tmp/main ."
+  bin = "./tmp/main"
+  exclude_dir = ["tmp", "vendor"]
+  include_ext = ["go", "tpl", "tmpl", "html", "css", "views"] # Added html and css extensions
+  delay = 1000 # ms
+  stop_on_error = true
+  rerun = false
+
+[log]
+  main_color = "magenta"
+  # log color
+  error_color = "red"
+  info_color = "yellow"
+  debug_color = "blue"
+  watcher_color = "cyan"
+
+[watch]
+  main_files = ["main.go"]
+  watched_files_recursive = ["controllers", "models", "views", "public"] # Watch views and public too
+  ignored_files = [".air.toml", "tmp", "vendor", ".git", "_*"]
+
+[screen]
+  clear_on_rebuild = true
+  log_prefix = "air"
