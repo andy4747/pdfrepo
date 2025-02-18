@@ -1,0 +1,213 @@
+<html>
+
+<head>
+  <link rel="stylesheet" href="/public/style.css">
+  <style>
+    #pdf-viewer-container {
+      width: 90%;
+      max-width: 1200px;
+      height: 1000px;
+      margin: 0px auto;
+      border: 1px solid #ccc;
+      overflow: auto;
+      background-color: #f5f5f5;
+    }
+
+    #pdfViewer {
+      display: block;
+      margin: 0 auto;
+      background-color: white;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .controls {
+      text-align: center;
+    }
+
+    .controls button {
+      padding: 10px 20px;
+      margin: 0 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .controls button:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    .page-input {
+      width: 50px;
+      text-align: center;
+      padding: 5px;
+      margin: 0 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .page-input:invalid {
+      border-color: red;
+    }
+
+    .page-info {
+      display: inline-flex;
+      align-items: center;
+      margin: 0 0px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="controls">
+    <button id="prevPage" disabled>Previous</button>
+    <span class="page-info">
+      Page <input type="number" id="pageInput" class="page-input" min="1" value="1"> of <span id="totalPages">?</span>
+    </span>
+    <button id="nextPage" disabled>Next</button>
+  </div>
+
+  <div id="pdf-viewer-container">
+    <canvas id="pdfViewer"></canvas>
+  </div>
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js"
+    integrity="sha512-Z8CqofpIcnJN80feS2uccz+pXWgZzeKxDsDNMD/dJ6997/LSRY+W4NmEt9acwR+Gt9OHN0kkI1CTianCwoqcjQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.worker.min.js"
+    integrity="sha512-lHibs5XrZL9hXP3Dhr/d2xJgPy91f2mhVAasrSbMkbmoTSm2Kz8DuSWszBLUg31v+BM6tSiHSqT72xwjaNvl0g=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    let currentPdfDoc = null;
+    let currentPage = 1;
+    let totalPages = 0;
+
+    const pdfUrl = "{{.PDFURL}}";
+    console.log({"pdf url": pdfUrl});
+
+    // Elements
+    const container = document.getElementById('pdf-viewer-container');
+    const pdfViewerCanvas = document.getElementById('pdfViewer');
+    const context = pdfViewerCanvas.getContext('2d');
+    const prevButton = document.getElementById('prevPage');
+    const nextButton = document.getElementById('nextPage');
+    const pageInput = document.getElementById('pageInput');
+    const totalPagesSpan = document.getElementById('totalPages');
+
+    // Function to calculate scale to fit width
+    function calculateScale(viewport) {
+      const containerWidth = container.clientWidth - 40;
+      return containerWidth / viewport.width;
+    }
+
+    // Function to validate and jump to a page
+    function jumpToPage(pageNumber) {
+      pageNumber = parseInt(pageNumber);
+      if (isNaN(pageNumber)) {
+        pageNumber = currentPage;
+      }
+
+      pageNumber = Math.max(1, Math.min(pageNumber, totalPages));
+
+      if (pageNumber !== currentPage) {
+        currentPage = pageNumber;
+        renderPage(currentPage);
+      }
+
+      pageInput.value = currentPage;
+    }
+
+    // Function to render a specific page
+    async function renderPage(pageNumber) {
+      const page = await currentPdfDoc.getPage(pageNumber);
+      const viewport = page.getViewport({scale: 1.0});
+      const scale = calculateScale(viewport);
+      const scaledViewport = page.getViewport({scale: scale});
+
+      pdfViewerCanvas.height = scaledViewport.height;
+      pdfViewerCanvas.width = scaledViewport.width;
+
+      const renderContext = {
+        canvasContext: context,
+        viewport: scaledViewport
+      };
+
+      await page.render(renderContext);
+
+      // Update UI
+      pageInput.value = pageNumber;
+      prevButton.disabled = pageNumber <= 1;
+      nextButton.disabled = pageNumber >= totalPages;
+    }
+
+    // Handle window resize
+    let resizeTimeout;
+    window.addEventListener('resize', function () {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(function () {
+        renderPage(currentPage);
+      }, 200);
+    });
+
+    // Event listeners for page input
+    pageInput.addEventListener('change', (e) => {
+      jumpToPage(e.target.value);
+    });
+
+    pageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        jumpToPage(e.target.value);
+        pageInput.blur();
+      }
+    });
+
+    // Button click handlers
+    prevButton.addEventListener('click', () => {
+      if (currentPage > 1) {
+        jumpToPage(currentPage - 1);
+      }
+    });
+
+    nextButton.addEventListener('click', () => {
+      if (currentPage < totalPages) {
+        jumpToPage(currentPage + 1);
+      }
+    });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.target === pageInput) {
+        return;
+      }
+      if (e.key === 'ArrowLeft' && currentPage > 1) {
+        jumpToPage(currentPage - 1);
+      } else if (e.key === 'ArrowRight' && currentPage < totalPages) {
+        jumpToPage(currentPage + 1);
+      }
+    });
+
+    // Initialize PDF viewer
+    pdfjsLib.getDocument(pdfUrl).promise.then(function (pdf) {
+      currentPdfDoc = pdf;
+      totalPages = pdf.numPages;
+      totalPagesSpan.textContent = totalPages;
+
+      // Set input constraints
+      pageInput.max = totalPages;
+      pageInput.min = 1;
+
+      // Enable buttons if there are multiple pages
+      prevButton.disabled = true;
+      nextButton.disabled = totalPages <= 1;
+
+      // Render first page
+      renderPage(currentPage);
+    }).catch(function (error) {
+      console.error('Error loading PDF:', error);
+      alert('Error loading PDF. Please check the console for details.');
+    });
+  </script>
+</body>
+
+</html>

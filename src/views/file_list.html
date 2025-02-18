@@ -1,0 +1,74 @@
+{{define "file_list.html"}}
+<link rel="stylesheet" href="/public/file_list.css">
+
+<div class="file-browser">
+  <div class="breadcrumb">
+    <span class="breadcrumb-item" data-path="">Root</span>
+    {{ $pathParts := split .Path "/" }}
+    {{ $currentPath := "" }}
+    {{ range $index, $part := $pathParts }}
+    {{ if ne $part "" }}
+    <span class="breadcrumb-separator">/</span>
+    {{ $currentPath = printf "%s/%s" $currentPath $part }}
+    <span class="breadcrumb-item" data-path="{{ $currentPath }}">
+      {{ $part }}
+    </span>
+    {{ end }}
+    {{ end }}
+  </div>
+  <div class="file-list">
+    <div class="file-list-header">
+      <div class="file-icon"></div>
+      <div>Name</div>
+      <div>Type</div>
+    </div>
+
+    {{if .NoPdf}}
+    <p>{{.NoPdf}}</p>
+    {{else}}
+    <div>
+      {{ range .GitHubItems }}
+      <div class="file-item" data-type="{{ .Type }}" data-path="{{ .Path }}">
+        <div class="file-icon"></div>
+        <div class="file-name">
+          {{ if eq .Type "dir" }}
+          <form action="/api/browse" method="POST" class="directory-form">
+            <input type="hidden" name="owner" value="{{ $.Owner }}">
+            <input type="hidden" name="repo" value="{{ $.Repo }}">
+            <input type="hidden" name="token" value="{{ $.Token }}">
+            <input type="hidden" name="path" value="{{ .Path }}">
+            <button type="submit" class="directory-button">
+              <div class="file-icon">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                  <path
+                    d="M20 5h-8.586L9.707 3.293A.997.997 0 0 0 9 3H4c-1.103 0-2 .897-2 2v14c0 1.103.897 2 2 2h16c1.103 0 2-.897 2-2V7c0-1.103-.897-2-2-2z" />
+                </svg>
+              </div>
+              <div class="file-name">
+                {{ .Name }}
+              </div>
+            </button>
+          </form>
+          {{ else }}
+          <a target="_blank" href="/api/pdf/reader?url={{ .DownloadURL }}" class="file-link">
+            <div class="file-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z" />
+              </svg>
+            </div>
+            <div class="file-name">
+              {{ .Name }}
+            </div>
+          </a>
+          {{ end }}
+        </div>
+        <div class="file-type">
+          {{ if eq .Type "dir" }}Directory{{ else }}PDF File{{ end }}
+        </div>
+      </div>
+      {{ end }}
+    </div>
+    {{end}}
+  </div>
+</div>
+{{end}}
