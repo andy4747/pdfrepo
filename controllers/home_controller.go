@@ -7,17 +7,12 @@ import (
 	"strings"
 )
 
-var count int
-
-// Create template functions map with direct function reference
 var funcMap = template.FuncMap{
 	"split": strings.Split, // Register split function directly
 }
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	count++
-	log.Printf("Request #%d - Method: %s, URL: %s, User-Agent: %s",
-		count,
+	log.Printf("Request - Method: %s, URL: %s, User-Agent: %s",
 		r.Method,
 		r.URL.Path,
 		r.Header.Get("User-Agent"))

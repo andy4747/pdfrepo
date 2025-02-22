@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"pdfrepo-backend/controllers" // Import your controllers
+	"pdfrepo-backend/controllers"
 )
 
 //go:embed views/*.html
